@@ -26,11 +26,10 @@
 
 ## Screenshots
 
-![Login Page](./public/login%20ss.png)
-
-![Admin Page](./public/admin%20ss.png)
-
-![Voter Page](./public/index%20ss.png)
+![Login Page](./public/login.png)
+![Admin Page](./public/admin_1.png)
+![Admin Page](./public/admin_2.png)
+![Voter Page](./public/voting.png)
 
 ## Installation
 
@@ -107,11 +106,11 @@
 
         node index.js
 
-6.  Navigate to `Database_API` folder in another terminal
+6.  Navigate to `fast_api` folder in another terminal
 
-        cd Database_API
+        cd fast_api
 
-    then start the database server by following command
+    then start the database server by following command or run through vscode
 
         uvicorn main:app --reload --host 127.0.0.1
 
