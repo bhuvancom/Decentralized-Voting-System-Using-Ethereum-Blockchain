@@ -83,7 +83,7 @@
 
 ## Usage
 
-#### Note: Update the database credentials in the `./Database_API/.env` file.
+#### Note: Update the database credentials in the `./fast_api/.env` file.
 
 1.  Open terminal at the project directory
 
@@ -124,44 +124,60 @@ You're all set! The Voting app should be up and running now at http://localhost:
 ## Code Structure
 
 <pre>
-    ├── blockchain-voting-dapp            # Root directory of the project.
-        ├── build                         # Directory containing compiled contract artifacts.
-        |   └── contracts
-        |       ├── Migrations.json
-        |       └── Voting.json
-        ├── contracts                     # Directory containing smart contract source code.
-        |   ├── 2_deploy_contracts.js
-        |   ├── Migrations.sol
-        |   └── Voting.sol
-        ├── Database_API                  # API code for database communication.
-        |   └── main.py
-        ├── migrations                    # Ethereum contract deployment scripts.
-        |   └── 1_initial_migration.js
-        ├── node_modules                  # Node.js modules and dependencies.
-        ├── public                        # Public assets like favicon.
-        |   └── favicon.ico
-        ├── src
-        |   ├── assets                    # Project images.
-        |   |   └── eth5.jpg
-        |   ├── css                       # CSS stylesheets.
-        |   |   ├── admin.css
-        |   |   ├── index.css
-        |   |   └── login.css
-        |   ├── dist                      # Compiled JavaScript bundles.
-        |   |   ├── app.bundle.js
-        |   |   └── login.bundle.js
-        |   ├── html                      # HTML templates.
-        |   |   ├── admin.html
-        |   |   ├── index.html
-        |   |   └── login.html
-        |   └── js                        # JavaScript logic files.
-        |       ├── app.js
-        |       └── login.js
-        ├── index.js                      # Main entry point for Node.js application.
-        ├── package.json                  # Node.js package configuration.
-        ├── package-lock.json             # Lockfile for package dependencies.
-        ├── README.md                     # Project documentation.
-        └── truffle-config.js                    # Truffle configuration file.
+├── LICENSE
+├── README.md
+├── build
+│   └── contracts
+│       ├── Migrations.json
+│       └── Voting.json
+├── contracts
+│   ├── 2_deploy_contracts.js
+│   ├── Migrations.sol
+│   └── Voting.sol
+├── fast_api
+│   ├── __pycache__
+│   │   └── main.cpython-313.pyc
+│   ├── main.py
+│   ├── models
+│   │   ├── __pycache__
+│   │   │   ├── login_req.cpython-313.pyc
+│   │   │   ├── register_req.cpython-313.pyc
+│   │   │   └── role.cpython-313.pyc
+│   │   ├── login_req.py
+│   │   ├── register_req.py
+│   │   └── role.py
+│   └── requirements.txt
+├── index.js
+├── migrations
+│   └── 1_initial_migration.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── admin ss.png
+│   ├── favicon.ico
+│   ├── index ss.png
+│   └── login ss.png
+├── src
+│   ├── assets
+│   │   └── eth5.jpg
+│   ├── css
+│   │   ├── admin.css
+│   │   ├── index.css
+│   │   ├── loader.css
+│   │   ├── login.css
+│   │   ├── popup.css
+│   │   └── register.css
+│   ├── html
+│   │   ├── admin.html
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   └── register.html
+│   └── js
+│       ├── app.js
+│       ├── auth-interceptor.js
+│       ├── login.js
+│       └── register.js
+└── truffle-config.js
 </pre>
 
 ## Thank you 😊
