@@ -1,0 +1,8 @@
+fastapi
+mysql-connector-python
+pydantic
+python-dotenv
+uvicorn
+PyJWT
+slowapi
+limits

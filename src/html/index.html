@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voting Page</title>
+    <link rel="stylesheet" type="text/css" href="../css/index.css" />
+    <link rel="stylesheet" type="text/css" href="../css/loader.css" />
+    <link rel="stylesheet" type="text/css" href="../css/popup.css" />
+  </head>
+  <body>
+    <div class="pop-up"></div>
+    <div class="loading"></div>
+    <div id="head" class="text-center" style="background: gray">
+      <h1 align="center" color="red" id="error"></h1>
+      <h1 align="center">Decentralized Voting Using Ethereum Blockchain</h1>
+      <h2 align="center">Welcome for Voting</h2>
+      <h3 align="center">
+        <p>Voting Dates: <span id="dates"></span></p>
+      </h3>
+      <br />
+    </div>
+    <div id="candidate" class="container">
+      <table class="table text-center">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Party</th>
+            <th>Total Vote</th>
+          </tr>
+        </thead>
+        <tbody id="boxCandidate"></tbody>
+      </table>
+      <br />
+      <div id="vote">
+        <p>Please select one of the candidates and click the vote button.</p>
+        <button
+          id="voteButton"
+          class="btn btn-primary"
+          onclick="App.vote()"
+          disabled
+        >
+          Vote
+        </button>
+        <div
+          id="msg1"
+          color="red"
+          style="background-color: red; color: white; padding: 10px"
+        ></div>
+
+        <div id="vote-box"></div>
+      </div>
+    </div>
+
+    <div id="account">
+      <p id="accountAddress" class="text-center"></p>
+    </div>
+    <div id="text-center">
+      <button id="logout" class="btn btn-danger">Logout</button>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script src="../js/auth-interceptor.js" type="module"></script>
+    <script src="../dist/app.bundle.js" type="module"></script>
+  </body>
+</html>
