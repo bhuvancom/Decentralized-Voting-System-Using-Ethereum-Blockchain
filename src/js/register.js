@@ -9,47 +9,38 @@ loginForm.addEventListener('submit', (event) => {
     const voter_id = document.getElementById('voter-id').value || "";
     const password = document.getElementById('password').value || "";
     var role = $("input[name='role']:checked").val();
-    if (!voter_id || voter_id.trim().length == 0) { alert('VoterId/username is required'); return; }
-    if (!password || password.trim().length == 0) { alert('Password is required'); return }
-    if (!role || role.trim().length == 0) { alert('Role is required'); return }
+    if (!voter_id || voter_id.trim().length == 0) { notifications.show('VoterId/username is required', 'error'); return; }
+    if (!password || password.trim().length == 0) { notifications.show('Password is required', 'error'); return }
+    if (!role || role.trim().length == 0) { notifications.show('Role is required', 'error'); return }
     register(voter_id, password, role);
 });
 
-const register = (voterId, password, role) => {
+const register = async (voterId, password, role) => {
     // display loader
     loader.show();
-    fetch(`http://127.0.0.1:8000/register`, {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username: voterId, password: password, role: role })
-    }).then(response => {
-        // hide loader
-        loader.hide();
-        if (response.ok) {
-            return response.json();
-        } else {
-            // display error pop-up
-            throw new Error('Register failed, try changing username/voterId.');
-        }
-    }).then(data => {
-        if (data.role === 'admin') {
-            console.log(data.role)
-            localStorage.setItem('jwtTokenAdmin', data.token);
-            window.location.replace(`http://127.0.0.1:8081/admin.html`);
-        } else if (data.role === 'user') {
-            localStorage.setItem('jwtTokenVoter', data.token);
-            window.location.replace(`http://127.0.0.1:8081/index.html`);
-        } else {
-            // display error pop-up
-        }
-    })
-        .catch(error => {
-            // display error pop-up
-            console.log(error);
-            loader.hide();
-            console.error('register failed:', error);
-            alert('failed to register ' + error)
+    try {
+        const req = await fetch(`http://127.0.0.1:8081/register`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: voterId, password: password, role: role })
         });
+        const data = await req.json();
+        if (req.ok) {
+            if (data.role === 'admin') {
+                window.location.replace(`http://127.0.0.1:8081/admin.html`);
+            } else if (data.role === 'user') {
+                window.location.replace(`http://127.0.0.1:8081/index.html`);
+            } else {
+                throw new Error("Unknown role.");
+            }
+        } else {
+            throw new Error(data.message || data.error || data.detail);
+        }
+    } catch (error) {
+        notifications.show('Register failed ' + error, 'error')
+    } finally {
+        loader.hide();
+    }
 }

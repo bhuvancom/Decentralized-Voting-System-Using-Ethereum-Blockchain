@@ -43,26 +43,34 @@ app.add_middleware(
 )
 
 # Connect to the MySQL database
-try:
-    cnx = mysql.connector.connect(
-        user=os.environ['MYSQL_USER'],
-        password=os.environ['MYSQL_PASSWORD'],
-        host=os.environ['MYSQL_HOST'],
-        database=os.environ['MYSQL_DB'],
-    )
-    cursor = cnx.cursor()
-except mysql.connector.Error as err:
-    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-        print("Something is wrong with your user name or password")
-    elif err.errno == errorcode.ER_BAD_DB_ERROR:
-        print("Database does not exist")
-    else:
-        print(err)
+def dbCall(script:str, options):    
+    try:
+        cnx = mysql.connector.connect(
+            user=os.environ['MYSQL_USER'],
+            password=os.environ['MYSQL_PASSWORD'],
+            host=os.environ['MYSQL_HOST'],
+            database=os.environ['MYSQL_DB'],
+        )
+        cursor = cnx.cursor()
+        cursor.execute(script, options)
+        result = cursor.fetchone()
+        cnx.commit()
+        return result
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Something is wrong with your user name or password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(err)
+    finally:
+        cursor.close()
+        cnx.close()
 
 
 # Define the POST endpoint for login
 @app.post("/login")
-@limiter.limit("50/minute")
+@limiter.limit("5/minute")
 async def login(request: Request, usr: LoginReq):
     role = await login_and_get_role(usr.username, usr.password)
     # Assuming authentication is successful, generate a token
@@ -80,15 +88,14 @@ def create_token(username: str, role: str):
 async def register(request: Request, usr: RegisterReq):
     global cursor
     try:
-        cursor = cnx.cursor()
         userName = usr.username
-        cursor.execute("""
+        user = dbCall("""
         select voter_id from voters where
         voter_id = %(voter_id)s
         """, {
             'voter_id': userName
         })
-        user = cursor.fetchone()
+
         if user:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -97,14 +104,13 @@ async def register(request: Request, usr: RegisterReq):
         else:
             password = sha256(usr.password.encode()).hexdigest()
             role = usr.role.value
-            cursor.execute("""
+            dbCall("""
             INSERT INTO voters (voter_id, role, password) values (%(voter_id)s, %(role)s, %(password)s)
             """, {
                 'voter_id': userName,
                 'role': role,
                 'password': password
             })
-            cnx.commit()
             return create_token(usr.username, role)
     except mysql.connector.Error as err:
         print(err)
@@ -112,19 +118,15 @@ async def register(request: Request, usr: RegisterReq):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error"
         )
-    finally:
-        cursor.close()
 
 
 async def login_and_get_role(voter_id, password):
-    global cursor
     try:
-        cursor = cnx.cursor();
-        cursor.execute("""SELECT password, role FROM voters WHERE 
+        user = dbCall("""SELECT password, role FROM voters WHERE 
         voter_id = %(voter_id)s """, {
             'voter_id': voter_id
         })
-        user = cursor.fetchone()
+
         if user:
             pw_hash = sha256(password.encode()).hexdigest()
             if pw_hash != user[0]: #check if stored hash and this has are same
@@ -144,8 +146,6 @@ async def login_and_get_role(voter_id, password):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error"
         )
-    finally:
-        cursor.close()
 
 
 if __name__ == "__main__":

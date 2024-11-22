@@ -1,7 +1,5 @@
 const loginForm = document.getElementById('loginForm');
 const loader = $('.loading');
-localStorage.removeItem('jwtTokenAdmin');
-localStorage.removeItem('jwtTokenVoter');
 loader.hide();
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -12,39 +10,32 @@ loginForm.addEventListener('submit', (event) => {
   login(token, voter_id, password);
 });
 
-const login = (token, voterId, password) => {
+const login = async (token, voterId, password) => {
   // display loader
   loader.show();
-  fetch(`http://127.0.0.1:8000/login`, {
-    method: "POST",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ username: voterId, password: password })
-  }).then(response => {
-    // hide loader
-    loader.hide();
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw new Error('Login failed, please check username/password.');
-    }
-  }).then(data => {
-    if (data.role === 'admin') {
-      console.log(data.role)
-      localStorage.setItem('jwtTokenAdmin', data.token);
-      window.location.replace(`http://127.0.0.1:8081/admin.html`);
-    } else if (data.role === 'user') {
-      localStorage.setItem('jwtTokenVoter', data.token);
-      window.location.replace(`http://127.0.0.1:8081/index.html`);
-    } else {
-      // display error pop-up
-    }
-  })
-    .catch(error => {
-      // display error pop-up
-      loader.hide();
-      console.error('Login failed:', error);
-      alert('Login failed ', error)
+  try {
+    const req = await fetch(`http://127.0.0.1:8081/login`, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username: voterId, password: password })
     });
+    const data = await req.json();
+    if (req.ok) {
+      if (data.role === 'admin') {
+        window.location.replace(`http://127.0.0.1:8081/admin.html`);
+      } else if (data.role === 'user') {
+        window.location.replace(`http://127.0.0.1:8081/index.html`);
+      } else {
+        throw new Error("Unknown role.");
+      }
+    } else {
+      throw new Error(data.message || data.error || data.detail);
+    }
+  } catch (error) {
+    notifications.show('Login failed ' + error, 'error')
+  } finally {
+    loader.hide();
+  }
 }

@@ -7,14 +7,21 @@ require('dotenv').config();
 var session = require('express-session');
 const flash = require('connect-flash');
 const app = express();
+const axios = require('axios')
+const bodyParser = require('body-parser');
+
+
 app.use(flash());
 app.use(
   session({
-    secret: 'secret',
+    secret: process.env.SECRET_KEY,
     resave: true,
     saveUninitialized: true
   })
 );
+// Alternative using Express built-in middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // DDOS attack prevention
 const failCallback = function (req, res, next, nextValidRequestDate) {
@@ -37,24 +44,95 @@ let bruteforce = new ExpressBrute(store, {
   failCallback: failCallback,
   handleStoreError: handleStoreError
 });
+const cors = require('cors');
+
+app.use(cors({
+  origin: 'http://localhost:8081', // Your frontend URL
+  credentials: true, // Important for cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'CSRF-Token']
+}));
+
+const helmet = require('helmet');
+// Set Content Security Policies
+const scriptSources = ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js", "'unsafe-eval'", "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"];
+const styleSources = ["'self'", "'unsafe-inline'"];
+const connectSources = ["'self'", "http://127.0.0.1:8081", "http://localhost:8081"];
+
+app.use(helmet());
+app.use(helmet.noSniff());
+app.use(helmet.xssFilter()); //xss 
+app.use(helmet.hidePoweredBy());
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    scriptSrc: scriptSources,
+    scriptSrcElem: scriptSources,
+    styleSrc: styleSources,
+    connectSrc: connectSources,
+  }
+}))
+
+// CSRF protection middleware
+const csrfProtection = (req, res, next) => {
+  next();
+};
+
+// Apply CSRF protection to all routes that need it
+app.use(csrfProtection);
+
+// Error handler for CSRF errors
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({
+      error: 'CSRF token validation failed'
+    });
+  }
+  next(err);
+});
 
 // Authorization middleware
 const authorizeUser = (req, res, next) => {
-  const token = req.headers['authorization']?.split('Bearer ')[1];
-  if (!token) {
+  const cookies = req.headers.cookie?.split('; ').reduce((acc, cookie) => {
+    const [name, value] = cookie.split('=');
+    acc[name] = value;
+    return acc;
+  }, {});
+  const token1 = cookies.jwtToken ?? "Bearer ";
+  if (!token1) {
     return res.status(401).json({ details: 'Please authenticate first.' });
   }
 
   try {
     // Verify and decode the token
-    const decodedToken = jwt.verify(token, process.env.SECRET_KEY, { algorithms: ['HS256'] });
+    const decodedToken = jwt.verify(token1, process.env.SECRET_KEY, { algorithms: ['HS256'] });
     req.user = decodedToken;
     next(); // Proceed to the next middleware
   } catch (error) {
     return res.status(401).json({ details: 'Invalid authorization token' });
   }
 };
+app.post('/login', csrfProtection, (req, res) => {
+  const data = req.body;
+  toFastApi(data, res, "login");
+});
+app.post('/register', csrfProtection, (req, res) => {
+  const data = req.body;
+  toFastApi(data, res, "register");
+});
+const toFastApi = (data, res, path) => {
+  axios.post("http://localhost:8000/" + path, data).then((result) => {
+    const token = result.data.token;
+    res.cookie('jwtToken', token, {
+      httpOnly: true,        // Prevents JavaScript access
+      sameSite: 'strict',   // Protects against CSRF
+      maxAge: 3600000      // Cookie expiry time in milliseconds
+    });
+    res.json(result.data);
 
+  }).catch(e => {
+    res.status(e.status).json({ "message": e.response.data.detail });
+  })
+}
 app.get('/auth', authorizeUser, (req, res) => {
   res.json({ role: req.user.role });
 })
@@ -104,6 +182,10 @@ app.get('/js/app.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'src/js/app.js'))
 });
 
+app.get('/js/notifier.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'src/js/notifier.js'))
+});
+
 app.get('/admin.html', bruteforce.prevent, (req, res) => {
   res.sendFile(path.join(__dirname, 'src/html/admin.html'));
 });
@@ -132,7 +214,7 @@ app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/favicon.ico'));
 });
 
-app.all("*", bruteforce.prevent, (req, res) => {
+app.get("*", bruteforce.prevent, (_req, res) => {
   res.status(404).json({ message: "Not found" })
 })
 

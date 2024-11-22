@@ -41,12 +41,12 @@ window.App = {
                   const start = data[0];
                   const end = data[1];
                   if (!start || start < 1) {
-                    alert('Define date first');
+                    notifications.show('Define date first', 'error');
                     return;
                   }
 
                   if (!end || end < 1) {
-                    alert('Define date first');
+                    notifications.show('Define date first', 'error');
                     return;
                   }
 
@@ -61,12 +61,12 @@ window.App = {
             var nameCandidate = $('#name').val() || "";
             var partyCandidate = $('#party').val() || "";
             if (!nameCandidate || nameCandidate.trim().length == 0) {
-              alert('Name is empty');
+              notifications.show('Name is empty', 'error');
               return
             }
 
             if (!partyCandidate || partyCandidate.trim().length == 0) {
-              alert('Party candidate is empty');
+              notifications.show('Party candidate is empty', 'error');
               return
             }
 
@@ -77,13 +77,13 @@ window.App = {
                   window.location.reload(1);
                 })
                   .catch((error) => {
-                    alert('Error while adding, please try to update name and party name.');
+                    notifications.show('Error while adding, please try to update name and party name.', 'error');
                     $('#msg').html('Error while adding, please try to update name and party name.')
                     console.error(error);
                   });
               } else {
                 $("#addCandidate").attr("disabled", true);
-                alert("Voting has started, can not modify.")
+                notifications.show("Voting has started, can not modify.", 'error')
               }
             });
           });
@@ -94,7 +94,7 @@ window.App = {
             instance.getVotingState().then((isVotingEnabled) => {
               if (isVotingEnabled) {
                 $("#addDate").attr("disabled", true);
-                alert("Voting has started, can not modify.")
+                notifications.show("Voting has started, can not modify.", 'error')
               } else {
                 $("#addDate").attr("disabled", false);
                 instance.setDates(startDate, endDate).then(function (rslt) {
@@ -112,7 +112,7 @@ window.App = {
             $("#dates").text(startDate.toDateString(("#DD#/#MM#/#YYYY#")) + " - " + endDate.toDateString("#DD#/#MM#/#YYYY#"));
           }).catch(function (err) {
             console.error("ERROR! " + err.message)
-            alert('error while getting dates ', err)
+            notifications.show('error while getting dates ' + err, 'error')
           });
         });
 
@@ -150,7 +150,7 @@ window.App = {
       });
 
     }).catch(function (err) {
-      alert('error ', { err });
+      notifications.show('error ' + err, 'error');
       console.error("ERROR! " + err.message)
     })
   },
